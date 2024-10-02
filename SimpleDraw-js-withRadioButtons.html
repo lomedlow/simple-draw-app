@@ -1,0 +1,150 @@
+<html>
+<body>
+
+<script language="JavaScript">
+var MODE_DRAW = 1;
+var MODE_SELECT = 2;
+var MODE_MOVE = 3;
+var mode = MODE_DRAW;
+</script>
+
+<canvas id="myCanvas" width="500" height="600" style="border:2px solid #000000;"> </canvas>
+<br/>
+<label><input type='radio' name="radio_mode" onclick='setMode(MODE_DRAW);' checked>Draw</label>
+<label><input type='radio' name="radio_mode" onclick='setMode(MODE_SELECT);'>Rectangle Select</label>
+<label><input type='radio' name="radio_mode" onclick='setMode(MODE_MOVE);'>Move Selection</label>
+<button onclick="clearButtonHandler()">Delete All</button>
+
+<script language="JavaScript">
+
+var canvas = document.getElementById("myCanvas");
+var canvas_context = canvas.getContext("2d");
+
+var mouse_drag_start_x = 0;
+var mouse_drag_start_y = 0;
+var mouse_previous_x = 0;
+var mouse_previous_y = 0;
+var buttonIsDown = false;
+
+// this is the set of strokes already drawn
+var arrayOfStrokes = [];
+
+// this is the set of strokes that are currently selected
+var selectedStrokes = [];
+
+// this is the stroke currently being drawn
+var stroke = []; // each stroke is an array of points
+
+function mouseDownHandler(e) {
+	buttonIsDown = true;
+	var canvas_rectangle = canvas.getBoundingClientRect();
+	var event_x = e.clientX - canvas_rectangle.left;
+	var event_y = e.clientY - canvas_rectangle.top;
+	//console.log("mouse down");
+	//console.log("   " + event_x + "," + event_y);
+	stroke = [];
+	switch ( mode ) {
+		case MODE_DRAW :
+			stroke.push( { x : event_x, y : event_y } );
+			break;
+		case MODE_SELECT :
+			break;
+		case MODE_MOVE :
+			break;
+	}
+	mouse_drag_start_x = mouse_previous_x = event_x;
+	mouse_drag_start_y = mouse_previous_y = event_y;
+}
+function mouseUpHandler(e) {
+	buttonIsDown = false;
+	var canvas_rectangle = canvas.getBoundingClientRect();
+	var event_x = e.clientX - canvas_rectangle.left;
+	var event_y = e.clientY - canvas_rectangle.top;
+	// console.log("mouse up");
+
+	switch ( mode ) {
+		case MODE_DRAW :
+			if ( stroke.length > 2 ) {
+				arrayOfStrokes.push( stroke );
+			}
+			stroke = [];
+			break;
+		case MODE_SELECT :
+			break;
+		case MODE_MOVE :
+			break;
+	}
+	mouse_previous_x = event_x;
+	mouse_previous_y = event_y;
+}
+function mouseMoveHandler(e) {
+	var canvas_rectangle = canvas.getBoundingClientRect();
+	var event_x = e.clientX - canvas_rectangle.left;
+	var event_y = e.clientY - canvas_rectangle.top;
+	//console.log("mouse move");
+	switch ( mode ) {
+		case MODE_DRAW :
+			if ( buttonIsDown ) {
+				stroke.push( { x : event_x, y : event_y } );
+			}
+			break;
+		case MODE_SELECT :
+			break;
+		case MODE_MOVE :
+			break;
+	}
+
+	redraw();
+	mouse_previous_x = event_x;
+	mouse_previous_y = event_y;
+}
+
+canvas.addEventListener('mousedown',mouseDownHandler);
+canvas.addEventListener('mouseup',mouseUpHandler);
+canvas.addEventListener('mousemove',mouseMoveHandler);
+
+function drawStroke( s ) {
+	canvas_context.beginPath();
+	for ( var i = 0; i < s.length; ++i ) {
+		var x = s[i].x;
+		var y = s[i].y;
+		if ( i === 0 ) {
+			canvas_context.moveTo(x,y);
+		}
+		else {
+			canvas_context.lineTo(x,y);
+		}
+	}
+	canvas_context.stroke();
+}
+
+var redraw = function() {
+	canvas_context.clearRect(0, 0, canvas.width, canvas.height);
+
+	canvas_context.strokeStyle = "#000000";
+	for ( var i = 0; i < arrayOfStrokes.length; ++i ) {
+		drawStroke( arrayOfStrokes[i] );
+	}
+
+	if ( buttonIsDown ) {
+		canvas_context.strokeStyle = "#ff0000";
+		drawStroke( stroke );
+	}
+}
+
+redraw();
+
+var setMode = function( m ) {
+	mode = m;
+	//console.log("The current mode is " + mode );
+}
+
+function clearButtonHandler() {
+	arrayOfStrokes = [];
+	redraw();
+}
+
+</script>
+
+</body>
+</html>
