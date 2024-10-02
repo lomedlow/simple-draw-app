@@ -227,9 +227,16 @@ function selectStrokesInRectangle(rect) {
 
 // Fonction pour vérifier si un trait est dans le rectangle
 function isStrokeInRectangle(stroke, rect) {
+	// Déterminer les coordonnées minimales et maximales du rectangle pour prendre en compte toutes les directions
+	var xMin = Math.min(rect.x1, rect.x2);
+	var xMax = Math.max(rect.x1, rect.x2);
+	var yMin = Math.min(rect.y1, rect.y2);
+	var yMax = Math.max(rect.y1, rect.y2);
+
+	// Vérifier si tous les points du trait sont dans les bornes du rectangle
 	for (var i = 0; i < stroke.length; i++) {
 		var point = stroke[i];
-		if (point.x < rect.x1 || point.x > rect.x2 || point.y < rect.y1 || point.y > rect.y2) {
+		if (point.x < xMin || point.x > xMax || point.y < yMin || point.y > yMax) {
 			return false;
 		}
 	}
