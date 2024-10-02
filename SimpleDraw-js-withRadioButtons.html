@@ -47,6 +47,7 @@ var stroke = [];
 
 // Cette variable stockera le rectangle temporaire pour la sélection
 var selectionRectangle = null;
+var isMoving = false; // Variable pour vérifier si nous sommes en train de déplacer la sélection
 
 function mouseDownHandler(e) {
 	buttonIsDown = true;
@@ -63,6 +64,9 @@ function mouseDownHandler(e) {
 			selectionRectangle = { x1: event_x, y1: event_y, x2: event_x, y2: event_y };
 			break;
 		case MODE_MOVE :
+			if (selectedStrokes.length > 0) {
+				isMoving = true; // Commencer à déplacer la sélection
+			}
 			break;
 	}
 	mouse_drag_start_x = mouse_previous_x = event_x;
@@ -88,6 +92,7 @@ function mouseUpHandler(e) {
 			selectionRectangle = null;
 			break;
 		case MODE_MOVE :
+			isMoving = false; // Arrêter le déplacement
 			break;
 	}
 	mouse_previous_x = event_x;
@@ -113,6 +118,12 @@ function mouseMoveHandler(e) {
 			}
 			break;
 		case MODE_MOVE :
+			if (buttonIsDown && isMoving) {
+				// Calculer le décalage de la souris pour déplacer les traits sélectionnés
+				var offsetX = event_x - mouse_previous_x;
+				var offsetY = event_y - mouse_previous_y;
+				moveSelectedStrokes(offsetX, offsetY);
+			}
 			break;
 	}
 
@@ -181,6 +192,7 @@ function setMode(m) {
 
 function clearButtonHandler() {
 	arrayOfStrokes = [];
+	selectedStrokes = [];
 	redraw();
 }
 
@@ -212,6 +224,17 @@ function hexToRGB(hex) {
 
 // Initialisation de la bordure à la couleur par défaut (noir)
 updateSelectedColorBorder();
+
+// Fonction pour déplacer les traits sélectionnés
+function moveSelectedStrokes(offsetX, offsetY) {
+	for (var i = 0; i < selectedStrokes.length; i++) {
+		for (var j = 0; j < selectedStrokes[i].length; j++) {
+			selectedStrokes[i][j].x += offsetX;
+			selectedStrokes[i][j].y += offsetY;
+		}
+	}
+	redraw();
+}
 
 // Fonction pour sélectionner les traits dans le rectangle
 function selectStrokesInRectangle(rect) {
