@@ -1,3 +1,4 @@
+<!DOCTYPE html>
 <html>
 <body>
 
@@ -59,6 +60,8 @@ function mouseDownHandler(e) {
 	switch ( mode ) {
 		case MODE_DRAW :
 			stroke.push( { x : event_x, y : event_y, color: selectedColor } );
+			// Désélectionner tous les traits lorsque l'on commence à dessiner
+			selectedStrokes = [];
 			break;
 		case MODE_SELECT :
 			selectionRectangle = { x1: event_x, y1: event_y, x2: event_x, y2: event_y };
@@ -188,6 +191,11 @@ var redraw = function() {
 
 function setMode(m) {
 	mode = m;
+	if (mode === MODE_DRAW) {
+		// Désélectionner automatiquement tous les traits lorsqu'on passe en mode dessin
+		selectedStrokes = [];
+		redraw();
+	}
 }
 
 function clearButtonHandler() {
