@@ -132,7 +132,6 @@ function mouseMoveHandler(e) {
 			break;
 		case MODE_ERASE :
 			if (buttonIsDown) {
-				// Effacer les traits qui sont en contact avec le cercle
 				eraseStrokes(event_x, event_y);
 			}
 			break;
@@ -148,9 +147,28 @@ canvas.addEventListener('mouseup',mouseUpHandler);
 canvas.addEventListener('mousemove',mouseMoveHandler);
 
 function drawStroke( s, isSelected = false ) {
+	// Dessiner la bordure orangée si le trait est sélectionné
+	if (isSelected) {
+		canvas_context.beginPath();
+		canvas_context.strokeStyle = "orange";  // Couleur de la bordure
+		canvas_context.lineWidth = 8;  // Épaisseur de la bordure
+		for ( var i = 0; i < s.length; ++i ) {
+			var x = s[i].x;
+			var y = s[i].y;
+			if ( i === 0 ) {
+				canvas_context.moveTo(x,y);
+			}
+			else {
+				canvas_context.lineTo(x,y);
+			}
+		}
+		canvas_context.stroke();
+	}
+
+	// Dessiner le trait normal par-dessus la bordure
 	canvas_context.beginPath();
 	canvas_context.strokeStyle = s[0].color || "#000000";
-	canvas_context.lineWidth = 1;
+	canvas_context.lineWidth = 2;  // Épaisseur du trait normal
 	for ( var i = 0; i < s.length; ++i ) {
 		var x = s[i].x;
 		var y = s[i].y;
@@ -162,12 +180,6 @@ function drawStroke( s, isSelected = false ) {
 		}
 	}
 	canvas_context.stroke();
-
-	if (isSelected) {
-		canvas_context.lineWidth = 5;
-		canvas_context.strokeStyle = "orange";
-		canvas_context.stroke();
-	}
 }
 
 var redraw = function() {
