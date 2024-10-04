@@ -3,71 +3,114 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Canvas App Design</title>
+    <title>Canvas App with Dark Mode</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
     <style>
+        :root {
+            --bg-color: #f4f7fc;
+            --sidebar-bg: #e9ecef;
+            --canvas-border: #333;
+            --text-color: #333;
+            --button-bg: #007bff;
+            --button-hover: #0056b3;
+            --delete-bg: #fe4949;
+            --delete-hover: #d73535;
+            --copy-bg: #007bff;
+            --copy-hover: #0056b3;
+            --delete-all-bg: white;
+            --delete-all-border: #ff0000;
+            --delete-all-text: #ff0000;
+        }
+
+        /* Dark Mode Colors */
+        body.dark-mode {
+            --bg-color: #2e2e2e;
+            --sidebar-bg: #444;
+            --canvas-border: #ddd;
+            --text-color: #fff;
+            --button-bg: #5a5aff;
+            --button-hover: #3333cc;
+            --delete-bg: #ff6b6b;
+            --delete-hover: #d03535;
+            --copy-bg: #4a90e2;
+            --copy-hover: #287dc1;
+            --delete-all-bg: #444;
+            --delete-all-border: #ff6b6b;
+            --delete-all-text: #ff6b6b;
+        }
+
         body {
             font-family: Arial, sans-serif;
-            background-color: #f4f7fc;
+            background-color: var(--bg-color);
+            transition: background-color 0.5s ease, color 0.5s ease;
             display: flex;
             height: 100vh;
             justify-content: center;
             align-items: center;
             margin: 10px;
+            color: var(--text-color);
         }
+
         .container {
             display: flex;
             background-color: #fff;
             box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
             border-radius: 10px;
             overflow: hidden;
+            transition: background-color 0.5s ease;
         }
+
         .sidebar {
             padding: 20px;
             width: 250px;
-            background-color: #e9ecef;
+            background-color: var(--sidebar-bg);
             border-right: 2px solid #ddd;
+            transition: background-color 0.5s ease;
         }
+
         .sidebar h3 {
-            color: #333;
+            color: var(--text-color);
             margin-bottom: 15px;
         }
-        .sidebar label {
-            display: block;
-            margin: 10px 0;
+
+        .sidebar label, .sidebar hr {
+			display: block;
+            color: var(--text-color);
+            transition: color 0.5s ease;
         }
-        .sidebar hr {
-            margin: 15px 0;
-            border: none;
-            border-top: 2px solid #ddd;
-        }
+
         .palette {
             display: flex;
             gap: 10px;
             margin-top: 10px;
         }
+
         .palette button {
             width: 30px;
             height: 30px;
             border-radius: 5px;
             border: 2px solid black;
         }
+
         .canvas-container {
+
+			display: flex;
+    		flex-direction: column;
             padding: 20px;
             flex-grow: 1;
-            display: flex;
-            flex-direction: column;
             justify-content: center;
             align-items: center;
             background-color: #fafafa;
         }
+
         canvas {
-            border: 3px solid #363636;
+            border: 3px solid var(--canvas-border);
             background-color: #fff;
-            margin-bottom: 20px;
+            transition: border-color 0.5s ease;
         }
+
         button {
-            background-color: #007bff;
+            background-color: var(--button-bg);
             border: none;
             padding: 10px;
             width: 100%;
@@ -79,40 +122,111 @@
             gap: 5px;
             margin: 5px 0;
             opacity: 1;
+            transition: background-color 0.3s ease;
         }
-        button i {
-            font-size: 14px;
-        }
+
         button:hover {
-            background-color: #0056b3;
+            background-color: var(--button-hover);
         }
+
+        #deleteButton {
+            background-color: var(--delete-bg);
+        }
+
+        #deleteButton:hover {
+            background-color: var(--delete-hover);
+        }
+
+        #copyButton {
+            background-color: var(--copy-bg);
+        }
+
+        #copyButton:hover {
+            background-color: var(--copy-hover);
+        }
+
+        #deleteAllButton {
+            background-color: var(--delete-all-bg);
+            border: 1px solid var(--delete-all-border);
+            color: var(--delete-all-text);
+        }
+
+        #deleteAllButton:hover {
+            background-color: var(--delete-all-border);
+            color: white;
+        }
+
         .disabled-button {
             opacity: 0.6;
             pointer-events: none;
         }
-        .notification {
-            color: green;
-            margin-top: 10px;
+
+        #saveWithBg, #saveWithoutBg {
+            background-color: #28a745;
         }
-        #doubleClickAlert, #saveAlert {
-            color: red;
-            display: none;
-        }
+
         .flex-row {
             display: flex;
             align-items: center;
             gap: 10px;
         }
-        .save-buttons-container {
-            display: flex;
-			width: 100%;
-            gap: 10px;
-            justify-content: flex-start;
+
+        .notification {
+            color: green;
             margin-top: 10px;
         }
-        .sidebar-section {
-            margin-bottom: 15px;
+
+        #doubleClickAlert, #saveAlert {
+            color: red;
+            display: none;
         }
+
+        /* Cool transition animation for dark mode toggle */
+        .dark-mode-toggle {
+            position: relative;
+            display: inline-block;
+            width: 60px;
+            height: 30px;
+        }
+
+        .dark-mode-toggle input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+
+        .slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: #ccc;
+            transition: .4s;
+            border-radius: 30px;
+        }
+
+        .slider:before {
+            position: absolute;
+            content: "";
+            height: 22px;
+            width: 22px;
+            left: 4px;
+            bottom: 4px;
+            background-color: white;
+            transition: .4s;
+            border-radius: 50%;
+        }
+
+        input:checked + .slider {
+            background-color: #2196F3;
+        }
+
+        input:checked + .slider:before {
+            transform: translateX(28px);
+        }
+
     </style>
 </head>
 <body>
@@ -127,9 +241,9 @@
 
         <hr>
         <h3>Actions</h3>
-        <button id="deleteButton" onclick="deleteSelection()" class="disabled-button" style="background-color:#fe4949;"><i class="fas fa-trash-alt"></i> Delete Selection</button>
+        <button id="deleteButton" onclick="deleteSelection()" class="disabled-button"><i class="fas fa-trash-alt"></i> Delete Selection</button>
         <button id="copyButton" onclick="copySelection()" class="disabled-button"><i class="fas fa-copy"></i> Copy Selection</button>
-        <button onclick="clearButtonHandler()" style="border: 1px solid #FF0000; background-color:#fff; color:#FF0000;"><i class="fas fa-times"></i> Delete All</button>
+        <button id="deleteAllButton" onclick="clearButtonHandler()"><i class="fas fa-times"></i> Delete All</button>
 
         <hr>
         <h3>Features</h3>
@@ -144,6 +258,13 @@
             <strong>Error:</strong> Double-click feature is not enabled!
         </div>
 
+		<div>
+            <h3>Dark Mode</h3>
+            <label class="dark-mode-toggle">
+                <input type="checkbox" id="darkModeToggle" onclick="toggleDarkMode()">
+                <span class="slider"></span>
+            </label>
+        </div>
         <hr>
         <h3>Palette de couleurs</h3>
         <div class="palette">
@@ -152,19 +273,23 @@
             <button id="btnVert" onclick="setColor('#00FF00')" style="background-color: #00FF00;"></button>
             <button id="btnBleu" onclick="setColor('#0000FF')" style="background-color: #0000FF;"></button>
         </div>
+
+        <hr>
+        
+  
     </div>
 
     <div class="canvas-container">
         <canvas id="myCanvas" width="500" height="600"></canvas>
-
-        <div class="save-buttons-container">
-            <button id="saveWithBg" onclick="saveCanvasAsImage(true)" class="disabled-button" style="background-color:#28a745;"><i class="fas fa-save"></i> Save with Background</button>
-            <button id="saveWithoutBg" onclick="saveCanvasAsImage(false)" class="disabled-button" style="background-color:#28a745;"><i class="fas fa-save"></i> Save without Background</button>
-        </div>
+		<div id="saveAlert" class="notification"></div>
+        <button id="saveWithBg" onclick="saveCanvasAsImage(true)" class="disabled-button" style="background-color:#28a745;"><i class="fas fa-save"></i> Save with Background</button>
+        <button id="saveWithoutBg" onclick="saveCanvasAsImage(false)" class="disabled-button" style="background-color:#28a745;"><i class="fas fa-save"></i> Save without Background</button>
     </div>
+	
+
 </div>
 
-<script language="JavaScript">
+<script>
 var MODE_DRAW = 1;
 var MODE_SELECT = 2;
 var MODE_MOVE = 3;
@@ -192,6 +317,11 @@ var isMoving = false;
 window.onload = function() {
     updateSelectedColorBorder();  // Mettre à jour la bordure de la couleur par défaut (noir)
 };
+
+// Toggle dark mode
+function toggleDarkMode() {
+    document.body.classList.toggle('dark-mode');
+}
 
 // Gère le changement de mode
 function setMode(newMode) {
@@ -247,8 +377,16 @@ function saveCanvasAsImage(withBackground) {
     }
     tempContext.drawImage(canvas, 0, 0);
 
+    // Obtenir la date et l'heure actuelles
+    var now = new Date();
+    var dateStr = now.toLocaleDateString('fr-FR', { year: 'numeric', month: '2-digit', day: '2-digit' }).replace(/\//g, '-');
+    var timeStr = now.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: true }).replace(/:/g, ':').replace(' ', '');
+
+    // Remplacer AM/PM par le format français
+    timeStr = timeStr.replace('AM', 'AM').replace('PM', 'PM');
+
     var link = document.createElement('a');
-    link.download = 'canvas_image.png';
+    link.download = 'Canva image ' + dateStr + ' à ' + timeStr + '.png';
     link.href = tempCanvas.toDataURL();
     link.click();
 
