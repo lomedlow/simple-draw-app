@@ -13,7 +13,7 @@
             height: 100vh;
             justify-content: center;
             align-items: center;
-            margin: 0;
+            margin: 10px;
         }
         .container {
             display: flex;
@@ -56,13 +56,15 @@
             padding: 20px;
             flex-grow: 1;
             display: flex;
+            flex-direction: column;
             justify-content: center;
             align-items: center;
             background-color: #fafafa;
         }
         canvas {
-            border: 2px solid #333;
+            border: 3px solid #363636;
             background-color: #fff;
+            margin-bottom: 20px;
         }
         button {
             background-color: #007bff;
@@ -92,13 +94,21 @@
             color: green;
             margin-top: 10px;
         }
-        #doubleClickAlert {
+        #doubleClickAlert, #saveAlert {
             color: red;
+            display: none;
         }
         .flex-row {
             display: flex;
             align-items: center;
             gap: 10px;
+        }
+        .save-buttons-container {
+            display: flex;
+			width: 100%;
+            gap: 10px;
+            justify-content: flex-start;
+            margin-top: 10px;
         }
         .sidebar-section {
             margin-bottom: 15px;
@@ -130,7 +140,7 @@
         <div id="doubleClickNotification" class="notification" style="display: none;">
             <strong>Double Click Enabled:</strong> Double-click to toggle between "Draw" and "Erase".
         </div>
-        <div id="doubleClickAlert" class="notification" style="display: none;">
+        <div id="doubleClickAlert" class="notification">
             <strong>Error:</strong> Double-click feature is not enabled!
         </div>
 
@@ -146,6 +156,11 @@
 
     <div class="canvas-container">
         <canvas id="myCanvas" width="500" height="600"></canvas>
+
+        <div class="save-buttons-container">
+            <button id="saveWithBg" onclick="saveCanvasAsImage(true)" class="disabled-button" style="background-color:#28a745;"><i class="fas fa-save"></i> Save with Background</button>
+            <button id="saveWithoutBg" onclick="saveCanvasAsImage(false)" class="disabled-button" style="background-color:#28a745;"><i class="fas fa-save"></i> Save without Background</button>
+        </div>
     </div>
 </div>
 
@@ -188,6 +203,7 @@ function setMode(newMode) {
     document.getElementById('radio_erase').checked = (mode === MODE_ERASE);
 
     redraw();
+    toggleSaveButtons(arrayOfStrokes.length > 0);  // Activer/désactiver les boutons de sauvegarde
 }
 
 // Gère l'activation du double-clic
@@ -203,14 +219,44 @@ function toggleDoubleClick() {
 }
 
 // Affiche une alerte temporaire
-function showTemporaryAlert(message) {
-    var alertBox = document.getElementById("doubleClickAlert");
-    alertBox.innerHTML = `<strong>Error:</strong> ${message}`;
+function showTemporaryAlert(message, alertId = "doubleClickAlert") {
+    var alertBox = document.getElementById(alertId);
+    alertBox.innerHTML = `<strong>Info:</strong> ${message}`;
     alertBox.style.display = "block";
 
     setTimeout(function() {
         alertBox.style.display = "none";
     }, 3000);
+}
+
+// Sauvegarde le canvas comme image
+function saveCanvasAsImage(withBackground) {
+    // Ignorer les traits sélectionnés (sans la bordure orange)
+    var tempStrokes = selectedStrokes;
+    selectedStrokes = [];
+    redraw();
+
+    var tempCanvas = document.createElement('canvas');
+    tempCanvas.width = canvas.width;
+    tempCanvas.height = canvas.height;
+    var tempContext = tempCanvas.getContext('2d');
+
+    if (withBackground) {
+        tempContext.fillStyle = "#fff";  // Ajouter un fond blanc
+        tempContext.fillRect(0, 0, canvas.width, canvas.height);
+    }
+    tempContext.drawImage(canvas, 0, 0);
+
+    var link = document.createElement('a');
+    link.download = 'canvas_image.png';
+    link.href = tempCanvas.toDataURL();
+    link.click();
+
+    // Restaurer la sélection
+    selectedStrokes = tempStrokes;
+    redraw();
+
+    showTemporaryAlert('Image saved successfully!', 'saveAlert');
 }
 
 // Gère le double-clic
@@ -392,6 +438,14 @@ var redraw = function() {
         canvas_context.lineWidth = 2;
         canvas_context.stroke();
     }
+
+    toggleSaveButtons(arrayOfStrokes.length > 0);
+}
+
+// Activer/désactiver les boutons de sauvegarde
+function toggleSaveButtons(enable) {
+    document.getElementById("saveWithBg").classList.toggle("disabled-button", !enable);
+    document.getElementById("saveWithoutBg").classList.toggle("disabled-button", !enable);
 }
 
 // Effacer tout le canvas
@@ -399,6 +453,7 @@ function clearButtonHandler() {
     arrayOfStrokes = [];
     selectedStrokes = [];
     redraw();
+    toggleSaveButtons(false);  // Désactiver les boutons de sauvegarde
 }
 
 // Fonction pour définir la couleur sélectionnée
