@@ -1,4 +1,8 @@
 <html>
+<head>
+  <!-- Inclure Font Awesome pour les icônes -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+</head>
 <body>
 
 <script language="JavaScript">
@@ -6,12 +10,13 @@ var MODE_DRAW = 1;
 var MODE_SELECT = 2;
 var MODE_MOVE = 3;
 var MODE_ERASE = 4;
-var mode = MODE_DRAW;  // Mode initial: dessin
+var mode = MODE_DRAW;
 var previousMode = MODE_DRAW;
 
 var selectedColor = "#000000"; 
 var eraseRadius = 30; 
-var copyOffset = 30;  // Décalage des copies
+var copyOffset = 30;
+var doubleClickEnabled = false;  // Fonctionnalité double clic désactivée par défaut
 
 </script>
 
@@ -22,12 +27,27 @@ var copyOffset = 30;  // Décalage des copies
 <label><input type='radio' id="radio_move" name="radio_mode" onclick='setMode(MODE_MOVE);'>Move Selection</label>
 <label><input type='radio' id="radio_erase" name="radio_mode" onclick='setMode(MODE_ERASE);'>Erase</label>
 
-<div style="display: flex; gap: 10px; margin-top: 5px;"></div>
-<button onclick="deleteSelection()">Supprimer la selection</button>
-<button onclick="copySelection()">Copier la selection</button>
+<div style="display: flex; gap: 5px; margin-top: 5px;">
+  <button onclick="deleteSelection()"><i class="fas fa-trash-alt"></i> Supprimer la sélection</button>
+  <button onclick="copySelection()"><i class="fas fa-copy"></i> Copier la sélection</button>
+  <button onclick="clearButtonHandler()">Delete All</button>
 </div>
 
-<button onclick="clearButtonHandler()">Delete All</button>
+<!-- Case à cocher pour activer la fonctionnalité de double clic -->
+<div style="margin-top: 5px;">
+  <input type="checkbox" id="doubleClickToggle" onclick="toggleDoubleClick()"> 
+  <label for="doubleClickToggle">Activer le basculement double clic (entre Dessin et Effacement)</label>
+</div>
+
+<!-- Texte de notification qui explique la fonctionnalité -->
+<div id="doubleClickNotification" style="display: none; margin-top: 5px; color: green;">
+  <strong>Mode Double Clic activé :</strong> Double-cliquez pour basculer entre "Dessin" et "Effacement".
+</div>
+
+<!-- Notification temporaire -->
+<div id="doubleClickAlert" style="display: none; margin-top: 5px; color: red;">
+  <strong>Erreur :</strong> La fonctionnalité double-clic n'est pas activée !
+</div>
 
 <!-- Titre pour la palette de couleurs -->
 <h3>Palette de couleurs</h3>
@@ -47,6 +67,7 @@ var canvas_context = canvas.getContext("2d");
 var mouse_previous_x = 0;
 var mouse_previous_y = 0;
 var buttonIsDown = false;
+var lastClickTime = 0;
 
 var arrayOfStrokes = [];
 var selectedStrokes = [];
@@ -69,7 +90,52 @@ function setMode(newMode) {
     redraw();
 }
 
+// Activer/désactiver la fonctionnalité de double clic
+function toggleDoubleClick() {
+    doubleClickEnabled = document.getElementById("doubleClickToggle").checked;
+    var notification = document.getElementById("doubleClickNotification");
+
+    if (doubleClickEnabled) {
+        notification.style.display = "block";  // Afficher la notification
+    } else {
+        notification.style.display = "none";   // Cacher la notification
+    }
+}
+
+// Afficher une notification temporaire pendant 3 secondes
+function showTemporaryAlert(message) {
+    var alertBox = document.getElementById("doubleClickAlert");
+    alertBox.innerHTML = `<strong>Erreur :</strong> ${message}`;
+    alertBox.style.display = "block";
+
+    setTimeout(function() {
+        alertBox.style.display = "none";
+    }, 3000);  // Masquer après 3 secondes
+}
+
+// Gestion du double clic pour basculer entre Dessin et Effacement
+function handleDoubleClick() {
+    var currentTime = new Date().getTime();
+    if (currentTime - lastClickTime < 300) {
+        // Double clic détecté
+        console.log("Double clic détecté !");
+        if (doubleClickEnabled) {
+            // Basculer entre mode "Dessin" et "Effacement"
+            if (mode === MODE_DRAW) {
+                setMode(MODE_ERASE);
+            } else if (mode === MODE_ERASE) {
+                setMode(MODE_DRAW);
+            }
+        } else {
+            // Afficher une alerte temporaire si la fonctionnalité n'est pas activée
+            showTemporaryAlert("La fonctionnalité double-clic n'est pas activée !");
+        }
+    }
+    lastClickTime = currentTime;
+}
+
 function mouseDownHandler(e) {
+    handleDoubleClick();  // Appeler la fonction de gestion du double clic
     buttonIsDown = true;
     var canvas_rectangle = canvas.getBoundingClientRect();
     var event_x = e.clientX - canvas_rectangle.left;
@@ -215,14 +281,46 @@ var redraw = function() {
         );
     }
 
-    // Ajouter le cercle d'effacement en mode "Erase"
+    // Afficher le cercle d'effacement
     if (mode === MODE_ERASE) {
         canvas_context.beginPath();
         canvas_context.arc(mouse_previous_x, mouse_previous_y, eraseRadius, 0, 2 * Math.PI);
-        canvas_context.strokeStyle = "#FF0000";  // Couleur du cercle d'effacement
+        canvas_context.strokeStyle = "#FF0000";
         canvas_context.lineWidth = 2;
         canvas_context.stroke();
     }
+}
+
+// Fonction pour supprimer la sélection
+function deleteSelection() {
+    if (selectedStrokes.length === 0) {
+        console.log("Aucune sélection à supprimer.");
+        return;
+    }
+    arrayOfStrokes = arrayOfStrokes.filter(function(stroke) {
+        return selectedStrokes.indexOf(stroke) === -1;
+    });
+    selectedStrokes = [];
+    redraw();
+}
+
+// Fonction pour copier la sélection
+function copySelection() {
+    if (selectedStrokes.length === 0) {
+        console.log("Aucune sélection à copier.");
+        return;
+    }
+
+    var newStrokes = selectedStrokes.map(function(stroke) {
+        var newStroke = stroke.map(function(point) {
+            return { x: point.x + copyOffset, y: point.y + copyOffset, color: point.color };
+        });
+        return newStroke;
+    });
+
+    arrayOfStrokes = arrayOfStrokes.concat(newStrokes);
+    selectedStrokes = newStrokes; 
+    redraw();
 }
 
 function clearButtonHandler() {
@@ -291,38 +389,6 @@ function selectStrokesInRectangle(rect) {
             selectedStrokes.push(stroke);
         }
     }
-    redraw();
-}
-
-// Fonction pour supprimer la sélection
-function deleteSelection() {
-    if (selectedStrokes.length === 0) {
-        console.log("Aucune sélection à supprimer.");
-        return;
-    }
-    arrayOfStrokes = arrayOfStrokes.filter(function(stroke) {
-        return selectedStrokes.indexOf(stroke) === -1;
-    });
-    selectedStrokes = [];
-    redraw();
-}
-
-// Fonction pour copier la sélection
-function copySelection() {
-    if (selectedStrokes.length === 0) {
-        console.log("Aucune sélection à copier.");
-        return;
-    }
-
-    var newStrokes = selectedStrokes.map(function(stroke) {
-        var newStroke = stroke.map(function(point) {
-            return { x: point.x + copyOffset, y: point.y + copyOffset, color: point.color };
-        });
-        return newStroke;
-    });
-
-    arrayOfStrokes = arrayOfStrokes.concat(newStrokes);
-    selectedStrokes = newStrokes; 
     redraw();
 }
 
